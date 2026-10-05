@@ -49,6 +49,11 @@ Item {
   readonly property int headerH: Math.max(Style.space(34), Style.font.subtitle + Style.space(18))
   readonly property int pad: Style.spacing.panelPadding
   readonly property int maxRows: 9
+  // Everything in the left column except the list: header, hairline, hint line
+  // and the three Column gaps between them.
+  readonly property int chromeH: headerH + Style.spacing.hairline + Style.space(18) + Style.space(6) * 3
+  // Floor so a single session still leaves room to read the preview.
+  readonly property int minCardH: Style.space(440)
   readonly property int leftW: Math.min(Style.space(480), win.width - Style.space(80))
   readonly property int previewW: Style.space(520)
   readonly property bool previewShown: previewOn && win.width > (leftW + previewW + Style.space(120))
@@ -223,9 +228,9 @@ Item {
       id: card
       width: root.pad * 2 + root.leftW + (root.previewShown ? root.pad + 1 + root.previewW : 0)
       height: Math.min(
-                root.pad * 2 + root.headerH + Style.space(6)
-                  + Math.max(1, Math.min(rowsModel.count, root.maxRows)) * (root.rowH + listView.spacing)
-                  + Style.space(30),
+                Math.max(root.minCardH,
+                         root.pad * 2 + root.chromeH
+                           + Math.max(1, Math.min(rowsModel.count, root.maxRows)) * (root.rowH + listView.spacing)),
                 win.height * 0.74)
       anchors.centerIn: parent
       color: Color.menu.background
@@ -321,8 +326,7 @@ Item {
             // results
             Item {
               width: parent.width
-              height: parent.height - root.headerH - Style.space(6) - Style.spacing.hairline
-                      - Style.space(18) - parent.spacing * 3
+              height: parent.height - root.chromeH
 
               Text {
                 anchors.centerIn: parent
