@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# tmux-sessions — backend del plugin io.github.cache21.tmux-sessions.
+# tmux-sessions — backend for the io.github.cache21.tmux-sessions plugin.
 #
-#   tmux-sessions list             una línea por sesión, campos separados por TAB:
-#                                  nombre, ventanas, clientes, creada, actividad, ruta
-#   tmux-sessions attach <name>    reanuda la sesión: si ya está abierta en alguna
-#                                  terminal la enfoca; si no, abre una terminal nueva
-#   tmux-sessions kill <name>      mata la sesión
-#   tmux-sessions preview <name>   ventanas + contenido del pane activo
+#   tmux-sessions list             one line per session, TAB-separated fields:
+#                                  name, windows, clients, created, activity, path
+#   tmux-sessions attach <name>    resume the session: if it is already attached in
+#                                  some terminal, focus it; otherwise open a new one
+#   tmux-sessions kill <name>      kill the session
+#   tmux-sessions preview <name>   window list + contents of the active pane
 #
-# Variables opcionales: TS_TERM_APP_ID (app-id de la terminal, default tmux-session).
+# Optional env: TS_TERM_APP_ID (terminal app-id, default tmux-session).
 
 set -uo pipefail
 
@@ -16,14 +16,14 @@ TAB=$'\t'
 
 die() { printf '%s\n' "$*" >&2; exit 1; }
 
-need_name() { [ -n "${1:-}" ] || die "falta el nombre de la sesión"; }
+need_name() { [ -n "${1:-}" ] || die "missing session name"; }
 
 cmd_list() {
   tmux list-sessions -F "#{session_name}${TAB}#{session_windows}${TAB}#{session_attached}${TAB}#{session_created}${TAB}#{session_activity}${TAB}#{pane_current_path}" 2>/dev/null || true
 }
 
-# Sube por la cadena de padres de un PID hasta dar con uno que sea dueño de una
-# ventana de Hyprland (la terminal donde corre el cliente tmux).
+# Walk up a PID's parent chain until one owns a Hyprland window (the terminal
+# the tmux client runs in).
 window_pid_for() {
   local pid="$1" wins
   wins="$(hyprctl clients -j 2>/dev/null | jq -r '.[].pid' 2>/dev/null)" || return 1
@@ -47,9 +47,9 @@ focus_pid() {
 cmd_attach() {
   need_name "${1:-}"
   local name="$1" cpid wpid
-  tmux has-session -t "=$name" 2>/dev/null || die "no existe la sesión: $name"
+  tmux has-session -t "=$name" 2>/dev/null || die "no such session: $name"
 
-  # ¿Ya está abierta en alguna terminal? Enfocarla en vez de duplicar el cliente.
+  # Already attached in some terminal? Focus it instead of opening a second client.
   while read -r cpid; do
     [ -n "$cpid" ] || continue
     if wpid="$(window_pid_for "$cpid")"; then
@@ -69,7 +69,7 @@ cmd_attach() {
 
 cmd_kill() {
   need_name "${1:-}"
-  tmux kill-session -t "=$1" 2>/dev/null || die "no se pudo matar: $1"
+  tmux kill-session -t "=$1" 2>/dev/null || die "could not kill: $1"
 }
 
 cmd_preview() {
@@ -79,7 +79,7 @@ cmd_preview() {
   tmux list-windows -t "=$name" \
     -F '#{?window_active,▸, } #{window_index}: #{window_name}  (#{window_panes} pane#{?#{==:#{window_panes},1},,s})' 2>/dev/null
   printf '\n'
-  # Últimas líneas con contenido del pane activo, sin el relleno en blanco final.
+  # Last non-empty lines of the active pane, without the trailing blank padding.
   tmux capture-pane -p -J -t "=$name:" 2>/dev/null \
     | sed -e 's/[[:space:]]*$//' \
     | awk 'NF { last = NR } { line[NR] = $0 } END { s = last - 40; if (s < 1) s = 1; for (i = s; i <= last; i++) print line[i] }'
@@ -90,5 +90,5 @@ case "${1:-}" in
   attach)  shift; cmd_attach "$@" ;;
   kill)    shift; cmd_kill "$@" ;;
   preview) shift; cmd_preview "$@" ;;
-  *) die "uso: tmux-sessions {list|attach <name>|kill <name>|preview <name>}" ;;
+  *) die "usage: tmux-sessions {list|attach <name>|kill <name>|preview <name>}" ;;
 esac

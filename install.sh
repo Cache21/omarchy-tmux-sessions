@@ -15,28 +15,28 @@ BIND_LINE="o.bind(\"$KEY\", \"tmux sessions\", \"omarchy-shell shell toggle $PLU
 BINDINGS="$HOME/.config/hypr/bindings.lua"
 
 if [ ! -f "$BINDINGS" ]; then
-  echo "No existe $BINDINGS — ¿es esto Omarchy 4?" >&2
+  echo "$BINDINGS not found — is this Omarchy 4?" >&2
   exit 1
 fi
 
 if grep -qF "$PLUGIN_ID" "$BINDINGS"; then
-  echo "El bind para $PLUGIN_ID ya está en $BINDINGS — nada que hacer."
+  echo "The bind for $PLUGIN_ID is already in $BINDINGS — nothing to do."
   exit 0
 fi
 
 if grep -qE '"SUPER \+ ALT \+ T"' "$BINDINGS"; then
-  echo "Aviso: SUPER + ALT + T ya está ocupado en $BINDINGS." >&2
-  echo "Editá el bind a mano con otra tecla libre. Línea sugerida:" >&2
+  echo "Warning: SUPER + ALT + T is already taken in $BINDINGS." >&2
+  echo "Add the bind by hand with a free key. Suggested line:" >&2
   echo "  $BIND_LINE" >&2
   exit 1
 fi
 
 cp -- "$BINDINGS" "$BINDINGS.bak.$(date +%s)"
 printf '\n-- tmux sessions (omarchy-tmux-sessions)\n%s\n' "$BIND_LINE" >> "$BINDINGS"
-echo "Agregado a $BINDINGS:"
+echo "Added to $BINDINGS:"
 echo "  $BIND_LINE"
 
 if command -v hyprctl >/dev/null 2>&1; then
   hyprctl reload >/dev/null && hyprctl configerrors || true
 fi
-echo "Listo. Probá:  SUPER + ALT + T"
+echo "Done. Try:  SUPER + ALT + T"

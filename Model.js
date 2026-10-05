@@ -28,14 +28,14 @@ function toInt(v) {
   return isNaN(n) ? 0 : n
 }
 
-// "hace 3 min" style relative time from unix seconds.
+// "3 min ago" style relative time from unix seconds.
 function relativeTime(sec, nowSec) {
   if (!sec) return ""
   var d = Math.max(0, (nowSec || Math.floor(Date.now() / 1000)) - sec)
-  if (d < 60) return "ahora"
-  if (d < 3600) return "hace " + Math.floor(d / 60) + " min"
-  if (d < 86400) return "hace " + Math.floor(d / 3600) + " h"
-  return "hace " + Math.floor(d / 86400) + " d"
+  if (d < 60) return "now"
+  if (d < 3600) return Math.floor(d / 60) + " min ago"
+  if (d < 86400) return Math.floor(d / 3600) + " h ago"
+  return Math.floor(d / 86400) + " d ago"
 }
 
 // Replaces $HOME with ~ for display.
@@ -90,7 +90,7 @@ function sortSessions(sessions, query) {
 // One-line detail under the session name.
 function detailLine(s, home, nowSec) {
   var parts = []
-  parts.push(s.windows + (s.windows === 1 ? " ventana" : " ventanas"))
+  parts.push(s.windows + (s.windows === 1 ? " window" : " windows"))
   var rt = relativeTime(s.activity, nowSec)
   if (rt) parts.push(rt)
   if (s.path) parts.push(shortPath(s.path, home))

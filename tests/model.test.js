@@ -24,10 +24,10 @@ eq(M.parseSessions("x\tnope\t\t\t\t").length, 1, "non-numeric fields tolerated")
 eq(M.parseSessions("x\tnope\t\t\t\t")[0].windows, 0, "non-numeric -> 0")
 
 console.log("relativeTime")
-eq(M.relativeTime(1000, 1030), "ahora", "< 1 min")
-eq(M.relativeTime(1000, 1000 + 180), "hace 3 min", "minutes")
-eq(M.relativeTime(1000, 1000 + 7200), "hace 2 h", "hours")
-eq(M.relativeTime(1000, 1000 + 86400 * 3), "hace 3 d", "days")
+eq(M.relativeTime(1000, 1030), "now", "< 1 min")
+eq(M.relativeTime(1000, 1000 + 180), "3 min ago", "minutes")
+eq(M.relativeTime(1000, 1000 + 7200), "2 h ago", "hours")
+eq(M.relativeTime(1000, 1000 + 86400 * 3), "3 d ago", "days")
 eq(M.relativeTime(0, 1000), "", "no timestamp")
 
 console.log("shortPath")
@@ -42,8 +42,8 @@ eq(M.sortSessions(ss, "Projects").map(s => s.name), ["api"], "filters by path to
 eq(M.sortSessions(ss, "zzz"), [], "no match")
 
 console.log("detailLine")
-eq(M.detailLine(ss[1], "/home/u", 960), "1 ventana · hace 1 min · ~/Projects/api", "singular + path")
-eq(M.detailLine(ss[0], "/home/u", 520), "2 ventanas · ahora · ~/notes", "plural")
+eq(M.detailLine(ss[1], "/home/u", 960), "1 window · 1 min ago · ~/Projects/api", "singular + path")
+eq(M.detailLine(ss[0], "/home/u", 520), "2 windows · now · ~/notes", "plural")
 
 console.log(failed ? "\n" + failed + " failed" : "\nall passed")
 process.exit(failed ? 1 : 0)

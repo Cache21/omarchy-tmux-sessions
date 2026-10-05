@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "author": "Manuel Artia",
   "license": "MIT",
-  "description": "Menú que lista las sesiones tmux activas con preview del pane activo; Enter la reanuda (o enfoca la terminal donde ya está abierta) y Ctrl+K la mata.",
+  "description": "Menu that lists your live tmux sessions with a preview of the active pane; Enter resumes one (or focuses the terminal where it is already attached) and Ctrl+K kills it.",
   "kinds": [
     "menu"
   ],

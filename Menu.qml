@@ -138,7 +138,7 @@ Item {
     root.rebuild()
     killProc.command = [root.scriptPath, "kill", name]
     killProc.running = true
-    root.showNote("Sesión terminada: " + name)
+    root.showNote("Session killed: " + name)
   }
 
   function showNote(t) { root.note = t; noteTimer.restart() }
@@ -169,7 +169,7 @@ Item {
     stdout: StdioCollector {}
     stderr: StdioCollector { id: killErr }
     onExited: function (code) {
-      if (code !== 0) root.showNote(killErr.text.trim() || "No se pudo matar la sesión")
+      if (code !== 0) root.showNote(killErr.text.trim() || "Could not kill the session")
       listProc.running = true
     }
   }
@@ -265,7 +265,7 @@ Item {
                 id: countTag
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                text: root.sessions.length + (root.sessions.length === 1 ? " sesión" : " sesiones")
+                text: root.sessions.length + (root.sessions.length === 1 ? " session" : " sessions")
                 color: Color.menu.text
                 opacity: 0.55
                 font.family: Style.font.family
@@ -276,7 +276,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: parent.left
                 visible: searchInput.text.length === 0
-                text: "Buscar sesión tmux…"
+                text: "Search tmux sessions…"
                 color: Color.menu.text
                 opacity: 0.5
                 font.family: Style.font.family
@@ -331,8 +331,8 @@ Item {
               Text {
                 anchors.centerIn: parent
                 visible: rowsModel.count === 0
-                text: !root.loadedOnce ? "Buscando…"
-                      : (root.sessions.length === 0 ? "No hay sesiones tmux activas" : "Ninguna sesión coincide")
+                text: !root.loadedOnce ? "Loading…"
+                      : (root.sessions.length === 0 ? "No live tmux sessions" : "No matching sessions")
                 color: Color.menu.text
                 opacity: 0.5
                 font.family: Style.font.family
@@ -414,7 +414,7 @@ Item {
                     anchors.right: parent.right
                     anchors.rightMargin: Style.space(14)
                     anchors.verticalCenter: parent.verticalCenter
-                    text: rowItem.attached ? "● abierta" : ""
+                    text: rowItem.attached ? "● attached" : ""
                     color: Color.menu.selectedText
                     font.family: Style.font.family
                     font.pixelSize: Style.font.caption
@@ -438,7 +438,7 @@ Item {
             Text {
               width: parent.width
               height: Style.space(18)
-              text: root.note.length ? root.note : "Enter reanudar · Ctrl+K matar · Ctrl+P preview · Esc cerrar"
+              text: root.note.length ? root.note : "Enter resume · Ctrl+K kill · Ctrl+P preview · Esc close"
               color: root.note.length ? Color.menu.selectedText : Color.menu.text
               opacity: root.note.length ? 1 : 0.45
               font.family: Style.font.family
