@@ -7,7 +7,7 @@
 An overlay menu for the [Omarchy shell](https://omarchy.org/) that lists your
 live tmux sessions and lets you **resume** or **kill** them.
 
-https://github.com/Cache21/omarchy-tmux-sessions/raw/main/demo.mp4
+![tmux sessions demo: browse, filter, kill and resume sessions, then switch Omarchy themes](demo.gif)
 
 - Each row shows the session name, window count, last activity and the active
   pane's directory, plus `● attached` when a terminal is already connected.
