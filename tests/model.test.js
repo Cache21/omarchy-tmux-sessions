@@ -45,5 +45,13 @@ console.log("detailLine")
 eq(M.detailLine(ss[1], "/home/u", 960), "1 window · 1 min ago · ~/Projects/api", "singular + path")
 eq(M.detailLine(ss[0], "/home/u", 520), "2 windows · now · ~/notes", "plural")
 
+console.log("newSessionName")
+eq(M.newSessionName(ss, ""), "", "empty query -> nothing to create")
+eq(M.newSessionName(ss, "   "), "", "blank query -> nothing to create")
+eq(M.newSessionName(ss, "work"), "", "exact existing name -> nothing to create")
+eq(M.newSessionName(ss, "wo"), "wo", "partial match still offers a new session")
+eq(M.newSessionName(ss, "  blog "), "blog", "trims the query")
+eq(M.newSessionName(ss, "my.app:2"), "my_app_2", "replaces . and : like tmux")
+
 console.log(failed ? "\n" + failed + " failed" : "\nall passed")
 process.exit(failed ? 1 : 0)

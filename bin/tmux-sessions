@@ -5,6 +5,8 @@
 #                                  name, windows, clients, created, activity, path
 #   tmux-sessions attach <name>    resume the session: if it is already attached in
 #                                  some terminal, focus it; otherwise open a new one
+#   tmux-sessions new <name>       create the session (in $HOME) and open it in a
+#                                  new terminal; attaches instead if it exists
 #   tmux-sessions kill <name>      kill the session
 #   tmux-sessions preview <name>   window list + contents of the active pane
 #
@@ -57,14 +59,28 @@ cmd_attach() {
     fi
   done < <(tmux list-clients -t "=$name" -F '#{client_pid}' 2>/dev/null)
 
+  open_term tmux attach-session -t "=$name"
+}
+
+# Run a command in a new terminal window.
+open_term() {
   local app_id="${TS_TERM_APP_ID:-tmux-session}"
   if command -v omarchy-launch-tui >/dev/null 2>&1; then
-    exec omarchy-launch-tui --app-id="$app_id" tmux attach-session -t "=$name"
+    exec omarchy-launch-tui --app-id="$app_id" "$@"
   elif [ -n "${TERMINAL:-}" ]; then
-    exec "$TERMINAL" -e tmux attach-session -t "=$name"
+    exec "$TERMINAL" -e "$@"
   else
-    exec xdg-terminal-exec tmux attach-session -t "=$name"
+    exec xdg-terminal-exec "$@"
   fi
+}
+
+cmd_new() {
+  need_name "${1:-}"
+  local name="$1"
+  tmux has-session -t "=$name" 2>/dev/null && cmd_attach "$name"
+  # Create detached first so the session exists even if the terminal fails.
+  tmux new-session -d -s "$name" -c "$HOME" 2>/dev/null || die "could not create: $name"
+  open_term tmux attach-session -t "=$name"
 }
 
 cmd_kill() {
@@ -88,7 +104,8 @@ cmd_preview() {
 case "${1:-}" in
   list)    cmd_list ;;
   attach)  shift; cmd_attach "$@" ;;
+  new)     shift; cmd_new "$@" ;;
   kill)    shift; cmd_kill "$@" ;;
   preview) shift; cmd_preview "$@" ;;
-  *) die "usage: tmux-sessions {list|attach <name>|kill <name>|preview <name>}" ;;
+  *) die "usage: tmux-sessions {list|attach <name>|new <name>|kill <name>|preview <name>}" ;;
 esac

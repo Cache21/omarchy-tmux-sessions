@@ -5,7 +5,7 @@
 > plugins run unsandboxed inside `omarchy-shell`.
 
 An overlay menu for the [Omarchy shell](https://omarchy.org/) that lists your
-live tmux sessions and lets you **resume** or **kill** them.
+live tmux sessions and lets you **resume**, **kill** or **create** them.
 
 ![tmux sessions demo: browse, filter, kill and resume sessions, then switch Omarchy themes](demo.gif)
 
@@ -17,6 +17,9 @@ live tmux sessions and lets you **resume** or **kill** them.
   that window** instead of opening a second client. Otherwise it opens a new
   terminal (`omarchy-launch-tui --app-id=tmux-session`) running
   `tmux attach-session`.
+- Typing a name that doesn't match any session exactly adds a **`+` row** at
+  the end of the list to create it (in `~`, opened in a new terminal). Dots and
+  colons become `_`, as tmux requires.
 - Follows your Omarchy theme, like the rest of the shell.
 
 ## Keys inside the menu
@@ -25,7 +28,8 @@ live tmux sessions and lets you **resume** or **kill** them.
 |---|---|
 | `↑` / `↓`, `PgUp` / `PgDn` | Move the selection |
 | type | Fuzzy filter by name or path |
-| `Enter` / click | Resume the session |
+| `Enter` / click | Resume the session (or create it, on the `+` row) |
+| `Shift+Enter` | Create a session named after the search text |
 | `Ctrl+K` / middle click | Kill the session |
 | `Ctrl+P` | Toggle the preview |
 | `Esc` | Clear the filter, or close |
@@ -51,7 +55,7 @@ o.bind("SUPER + ALT + T", "tmux sessions", "omarchy-shell shell toggle io.github
 
 ```bash
 node tests/model.test.js
-bin/tmux-sessions list | preview <name> | attach <name> | kill <name>
+bin/tmux-sessions list | preview <name> | attach <name> | new <name> | kill <name>
 ```
 
 Note: if your `tmux.conf` sets `detach-on-destroy off`, killing a session that

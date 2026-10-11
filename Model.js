@@ -97,6 +97,23 @@ function detailLine(s, home, nowSec) {
   return parts.join(" · ")
 }
 
+// tmux session name from the search text: trimmed, with "." and ":" (target
+// separators tmux rejects) replaced by "_". Empty string if nothing usable.
+function sessionNameFrom(query) {
+  return String(query || "").trim().replace(/[.:]/g, "_")
+}
+
+// The name to offer as "create new session" for this query, or "" when the
+// query is empty or a session with that exact name already exists.
+function newSessionName(sessions, query) {
+  var name = sessionNameFrom(query)
+  if (!name) return ""
+  for (var i = 0; i < sessions.length; i++) {
+    if (sessions[i].name === name) return ""
+  }
+  return name
+}
+
 // node test entry point; ignored by QML's JS import.
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
@@ -105,6 +122,8 @@ if (typeof module !== "undefined" && module.exports) {
     shortPath: shortPath,
     fuzzyScore: fuzzyScore,
     sortSessions: sortSessions,
-    detailLine: detailLine
+    detailLine: detailLine,
+    sessionNameFrom: sessionNameFrom,
+    newSessionName: newSessionName
   }
 }

@@ -2,13 +2,14 @@
 //
 // A layer-shell overlay listing the live tmux sessions. Enter resumes the
 // selected one through bin/tmux-sessions (focusing the terminal where it is
-// already attached, or opening a new one); Ctrl+K kills it.
+// already attached, or opening a new one); Ctrl+K kills it. Typing a name
+// that does not exist offers a "create" row (Shift+Enter creates directly).
 //
 // Lifecycle: the host calls open(payloadJson) after
 //   omarchy-shell shell summon io.github.cache21.tmux-sessions '{}'
 // and close() on hide. `opened` is read by the host to implement `toggle`.
 //
-// Shortcuts: ↑/↓ move · Enter resume · Ctrl+K kill · Ctrl+P preview · Esc
+// Shortcuts: ↑/↓ move · Enter resume · Shift+Enter new · Ctrl+K kill · Ctrl+P preview · Esc
 
 import Quickshell
 import Quickshell.Io
@@ -95,13 +96,17 @@ Item {
       rowsModel.append({
         name: s.name,
         detail: Model.detailLine(s, root.home, nowSec),
-        attached: s.clients > 0
+        attached: s.clients > 0,
+        isNew: false
       })
     }
+    // Typed name with no exact match: offer to create it, after the matches.
+    var newName = Model.newSessionName(root.sessions, root.filter)
+    if (newName) rowsModel.append({ name: newName, detail: "Create new session", attached: false, isNew: true })
     var restored = -1
     if (keep) {
       for (var j = 0; j < rowsModel.count; j++) {
-        if (rowsModel.get(j).name === keep) { restored = j; break }
+        if (rowsModel.get(j).name === keep && !rowsModel.get(j).isNew) { restored = j; break }
       }
     }
     if (restored >= 0) root.selIndex = restored
@@ -124,13 +129,21 @@ Item {
   function activate(i) {
     var row = (i >= 0 && i < rowsModel.count) ? rowsModel.get(i) : null
     if (!row) return
-    Quickshell.execDetached([root.scriptPath, "attach", row.name])
+    Quickshell.execDetached([root.scriptPath, row.isNew ? "new" : "attach", row.name])
+    root.close()
+  }
+
+  // Shift+Enter: create (or open, if it exists) a session named after the query.
+  function createFromQuery() {
+    var name = Model.sessionNameFrom(root.filter)
+    if (!name) return
+    Quickshell.execDetached([root.scriptPath, "new", name])
     root.close()
   }
 
   function killSelected() {
     var row = root.currentRow()
-    if (!row) return
+    if (!row || row.isNew) return
     // Snapshot before rebuild(): rowsModel.get() returns a live reference.
     var name = row.name
     // Optimistically drop the row; listProc in killProc.onExited confirms.
@@ -148,7 +161,7 @@ Item {
   function loadPreview() {
     if (!root.previewShown) return
     var row = root.currentRow()
-    if (!row) { root.currentPreview = ""; root.previewFor = ""; return }
+    if (!row || row.isNew) { root.currentPreview = ""; root.previewFor = ""; return }
     if (previewProc.running) { previewTimer.restart(); return }
     if (row.name !== root.previewFor) root.currentPreview = ""
     previewProc.target = row.name
@@ -315,7 +328,9 @@ Item {
                   else if (e.key === Qt.Key_PageDown) { root.move(6); e.accepted = true }
                   else if (e.key === Qt.Key_PageUp) { root.move(-6); e.accepted = true }
                   else if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter) {
-                    root.activate(root.selIndex); e.accepted = true
+                    if (e.modifiers & Qt.ShiftModifier) root.createFromQuery()
+                    else root.activate(root.selIndex)
+                    e.accepted = true
                   }
                 }
               }
@@ -355,6 +370,7 @@ Item {
                   required property string name
                   required property string detail
                   required property bool attached
+                  required property bool isNew
 
                   width: ListView.view.width
                   height: root.rowH
@@ -376,7 +392,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     width: Style.space(22)
                     horizontalAlignment: Text.AlignHCenter
-                    text: ""  // nf-cod-terminal_tmux
+                    text: rowItem.isNew ? "" : ""  // nf-fa-plus / nf-cod-terminal_tmux
                     color: rowItem.fg
                     font.family: Style.font.family
                     font.pixelSize: Style.font.iconLarge
@@ -426,7 +442,7 @@ Item {
                     acceptedButtons: Qt.LeftButton | Qt.MiddleButton
                     onPositionChanged: { if (root.selIndex !== rowItem.index) { root.selIndex = rowItem.index; root.schedulePreview() } }
                     onClicked: function (m) {
-                      if (m.button === Qt.MiddleButton) { root.selIndex = rowItem.index; root.killSelected() }
+                      if (m.button === Qt.MiddleButton) { if (!rowItem.isNew) { root.selIndex = rowItem.index; root.killSelected() } }
                       else root.activate(rowItem.index)
                     }
                   }
@@ -438,7 +454,7 @@ Item {
             Text {
               width: parent.width
               height: Style.space(18)
-              text: root.note.length ? root.note : "Enter resume · Ctrl+K kill · Ctrl+P preview · Esc close"
+              text: root.note.length ? root.note : "Enter resume · Shift+Enter new · Ctrl+K kill · Ctrl+P preview · Esc close"
               color: root.note.length ? Color.menu.selectedText : Color.menu.text
               opacity: root.note.length ? 1 : 0.45
               font.family: Style.font.family
@@ -473,7 +489,8 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            text: parent.head.length ? parent.head : (rowsModel.count ? "…" : "")
+            text: parent.head.length ? parent.head
+                  : (root.currentRow() && root.currentRow().isNew ? "New session in ~" : (rowsModel.count ? "…" : ""))
             color: Color.menu.text
             wrapMode: Text.NoWrap
             elide: Text.ElideRight
